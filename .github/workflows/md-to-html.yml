@@ -28,8 +28,7 @@ jobs:
               -o "$output" \
               --standalone \
               --metadata title="$(basename "$file")" \
-              --css .github/styles/github-markdown.css \
-              --highlight-style=github
+              --css .github/styles/github-markdown.css 
 
             # Wrap in GitHub-like container
             sed -i 's/<body>/<body class="markdown-body">/' "$output"
