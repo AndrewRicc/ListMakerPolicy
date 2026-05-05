@@ -1,0 +1,46 @@
+name: Convert Markdown to HTML
+
+on:
+  push:
+    paths:
+      - '**.md'
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, '[skip CI]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Install Pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+
+      - name: Convert .md to .html
+        run: |
+          for file in $(find . -name "*.md"); do
+            output="${file%.md}.html"
+
+            pandoc "$file" \
+              -o "$output" \
+              --standalone \
+              --metadata title="$(basename "$file")" \
+              --css .github/styles/github-markdown.css \
+              --highlight-style=github
+
+            # Wrap in GitHub-like container
+            sed -i 's/<body>/<body class="markdown-body">/' "$output"
+          done
+
+      - name: Commit & Push HTML files
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add *.html */*.html */*/*.html || true
+
+          git diff --cached --quiet || git commit -m "Auto-generate HTML from Markdown [skip CI]"
+          git push
