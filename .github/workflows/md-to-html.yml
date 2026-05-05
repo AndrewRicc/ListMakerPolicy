@@ -5,6 +5,9 @@ on:
     paths:
       - '**.md'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     if: "!contains(github.event.head_commit.message, '[skip CI]')"
@@ -28,9 +31,8 @@ jobs:
               -o "$output" \
               --standalone \
               --metadata title="$(basename "$file")" \
-              --css .github/styles/github-markdown.css 
+              --css .github/styles/github-markdown.css
 
-            # Wrap in GitHub-like container
             sed -i 's/<body>/<body class="markdown-body">/' "$output"
           done
 
@@ -39,7 +41,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git add *.html */*.html */*/*.html || true
+          find . -name "*.html" -print0 | xargs -0 git add || true
 
           git diff --cached --quiet || git commit -m "Auto-generate HTML from Markdown [skip CI]"
           git push
